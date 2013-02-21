@@ -1,6 +1,5 @@
-# ENTRY MODEL
-
+# ENTRY MODEL 
 class Entry
-  attr_accessor :journal_id, :entry_id, :time, :text
+  attr_accessor :journal, :entry_id, :date, :time, :text
 end
 
