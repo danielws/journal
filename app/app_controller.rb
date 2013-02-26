@@ -2,6 +2,7 @@
 require File.expand_path('../models/user_model', __FILE__)
 require File.expand_path('../models/journal_model', __FILE__)
 require File.expand_path('../models/entry_model', __FILE__)
+require File.expand_path('../views/view', __FILE__)
 require 'date'
 require 'time'
 
@@ -25,75 +26,112 @@ class Database
   end
 end
 
-class View 
-  def prompt
-    print "> "
-  end
-
-  def main_menu
-    puts "Welcome."
-    puts "What would you like to do? Type:"
-    puts "(1) to Log in"
-    puts "(2) to Sign up"
-    self.prompt
-    return response = gets.chomp.to_i
-  end
-
-  def get_number 
-    puts "-" * 80
-    puts "Hello there, please enter your phone number."
-
-    self.prompt
-    return number = gets.chomp
-  end
-
-  def get_password(t_or_f)
-    puts "-" * 80
-    if t_or_f == true
-      puts "Enter your password plz."
-      self.prompt
-      return password = gets.chomp
-    else
-      puts "Hey n00b. What do you want your password to be?"
-      self.prompt
-      return password = gets.chomp
-    end
-  end
-
-end
-
 class Controller
-  attr_accessor :view, :db
+  attr_accessor :view, :db, :logged_in, :current_user
+
   def start
-    menu_response = @view.main_menu
-    if menu_response = 1
-      self.login
-    elsif menu_response = 2
-      self.signup
+    self.logged_in = false
+    @view.show_message('greeting')
+
+    until @logged_in == true
+      menu_response = @view.logged_out
+      if menu_response == 1
+        self.login
+      elsif menu_response == 2
+        self.sign_up
+      else
+        view.show_error('invalid')
+      end
     end
+
+    until @logged_in == false
+      menu_response = @view.main_menu
+      if menu_response == 3
+        self.logout
+      elsif menu_response == 2
+        self.add_journal
+      else
+        view.show_error('invalid')
+      end
+    end
+  end
+  
+  def add_journal
+    view.show_message('journal-name')
+    journal_name = @view.get_journal_name
+    journal_added = @current_user.add_journal(Journal.new(journal_name))
+    view.show_message('journal-added')
+    puts journal_added.inspect
+  end
+
+  def logout
+    view.show_message('log-out')
+    @current_user = nil
+    self.start
   end
 
   def login 
-    number = view.get_number
-    if self.user_exist?(number)
-      puts "we did it!"
+    @view.show_message('get-number')
+    number = @view.get_number
+    @view.show_message('get-password')
+    password = @view.get_password
+    self.auth(number, password)
+  end
+
+  def sign_up
+    @view.show_message('get-number')
+    number = @view.get_number
+
+    # Check to see if the username is taken.
+    if user_exist?(number)
+      @view.show_error('username-taken')
+      return self.sign_up
+
+    # Grab the password. 
     else
-      puts "user doesn't exist."
+      @view.show_message('set-password')
+      password = @view.get_password
+      @view.show_message('confirm-password')
+      password_2 = @view.get_password
+
+      if password_2 == password
+        @db.add_user(number)
+        user = @db.get_user(number)
+        user.password = password_2
+        @view.show_message('account-created')
+        return self.login
+
+      else
+        @view.show_error('password-missmatch')
+        self.sign_up
+      end
     end
   end
 
-  def signup
-    view.get_number
-  end
-
   def user_exist?(number) 
-    if self.db.users.has_key?(number)
+    if @db.users.has_key?(number)
       return true
     else
       return false
     end
   end
 
+  def auth(num, pw)
+    if self.user_exist?(num)
+      user = @db.get_user(num)
+      if pw == user.password
+        @view.show_message('logged-in')
+        @current_user = user
+        self.logged_in = true
+      else 
+        puts "password incorrect"
+        @view.show_error('password-incorrect')
+      end
+    else
+      puts "username incorrect"
+      @view.show_error('username-incorrect')
+    end
+  end
 end
 
 # Start program
@@ -102,17 +140,5 @@ end
   controller.view = View.new
 
 controller.start
-
-
-=begin
-user_status = controller.user_exist?(db, view.get_number) 
-puts user_status.inspect
-
-password = view.get_password(user_status)
-puts password.inspect
-
-
-# need some sort of state machine runner script down here.
-=end
 
 
