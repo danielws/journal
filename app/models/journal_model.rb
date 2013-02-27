@@ -18,13 +18,14 @@ class Journal
     return @entries[key]
   end
   
-  def get_entry_by_date(string)
+  def get_entries_by_date(string)
+    results = []
     @entries.each_value do |x|
       if x.date == string
-        return x
+        results.push(x)
       end
     end
-    return nil
+    return results
   end
 end
 

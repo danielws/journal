@@ -17,6 +17,16 @@ class View
     puts "*" * 80
   end
 
+  def get_input
+    self.line
+    self.prompt
+    return number = gets.chomp
+  end
+
+  def puts_string(string)
+    puts string
+  end
+  
   def logged_out 
     self.new_view_line
     puts "What would you like to do? Type:"
@@ -24,18 +34,6 @@ class View
     puts "(2) to Sign up"
     self.prompt
     return response = gets.chomp.to_i
-  end
-
-  def get_number 
-    self.line
-    self.prompt
-    return number = gets.chomp
-  end
-
-  def get_password
-    self.line
-    self.prompt
-    return password = gets.chomp
   end
 
   def main_menu 
@@ -48,10 +46,27 @@ class View
     return response = gets.chomp.to_i
   end
 
-  def get_journal_name
-    self.line
+  def puts_list(obj)
+    puts obj.name
+  end
+
+  def journal_menu(obj)
+    self.new_view_line
+    journal_name = obj.name
+    puts "Currently viewing: #{journal_name}"
+    puts "Type a date to view entries for that day."
+    puts "Type '+' to create an entry."
     self.prompt
-    return name = gets.chomp
+    return input = gets.chomp
+  end
+
+  def show_results(obj)
+    self.new_view_line
+    obj.each do |x|
+      puts x.time
+      puts x.text
+      self.line
+    end
   end
 
   # Error messages
@@ -62,6 +77,12 @@ class View
     # Menu ------------------------------------------- 
     when 'invalid'
       puts "invalid input. Please try again."
+
+    when 'no-journal-found'
+      puts "No journal found by that name."
+
+    when 'no-results'
+      puts "No results found."
 
     # Sign up ------------------------------------------- 
     when 'username-taken' 
@@ -94,6 +115,17 @@ class View
 
     when 'journal-added'
       puts "Journal added."
+
+    when 'your-journals'
+      puts "Your Journals: Type its name to select it."
+    when 'entry-input'
+      puts "Type your entry."
+
+    when 'entry-added'
+      print "Your entry was added @ "
+
+    when 'search-date'
+      puts "Type a date to see entries on that day."
 
     # Log in ------------------------------------------- 
     when 'get-number'
